@@ -58,7 +58,7 @@ class CursesHud:
             col_width = column_widths[n]
             self.screen.addstr(0, col_start, "│")
             string = column
-            truncated = string if len(string) < column_widths[n] - 3 else string[:column_widths[n] - 6] + "..."
+            truncated = string if len(string) < column_widths[n] - 1 else string[:column_widths[n] - 6] + "..."
             self.screen.addstr(0, col_start + 2, truncated)
             self.screen.addstr(1, col_start, "┴" + ("─" * (col_width - 1)) )
 
