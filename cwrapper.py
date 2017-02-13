@@ -40,7 +40,13 @@ class CursesHud:
 
             for record in self.records:
                 if column in record:
-                    record_max_width = max(record_max_width, len(str(record[column])))
+                    r_value = record[column]
+                    if column in self.translations:
+                        r_value = self.translations[column](r_value)
+                    else:
+                        r_value = str(r_value)
+                    
+                    record_max_width = max(record_max_width, len(r_value))
 
             record_max_width += 3
 
