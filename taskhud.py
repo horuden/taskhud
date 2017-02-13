@@ -17,6 +17,9 @@ def t_date(s):
 
     return "{}-{}-{} {}:{}:{}".format(year, month, day, hour, minute, second)
 
+def t_tags(s):
+    return ", ".join(s)
+
 def run_gui(screen):
     hud = CursesHud(screen)
 
@@ -32,6 +35,9 @@ def run_gui(screen):
     hud.set_translation("entry", t_date)
     hud.set_translation("end", t_date)
     hud.set_translation("start", t_date)
+    hud.set_translation("scheduled", t_date)
+    
+    hud.set_translation("tags", t_tags)
 
     hud.mainloop()
 
