@@ -13,6 +13,8 @@ class CursesHud:
         self.extra_info_keys = []
         self.records = []
 
+        self.translations = {}
+
         self.scrollpos = 0
         self.selectpos = 0
 
@@ -24,6 +26,9 @@ class CursesHud:
         if key in self.columns:
             self.columns.remove(key)
             self.extra_info_keys += [key]
+
+    def set_translation(self, key, func):
+        self.translations[key] = func
 
     def render(self):
         column_widths = []
@@ -87,7 +92,12 @@ class CursesHud:
                     continue
 
                 col_start = sum(column_widths[0:n])
-                string = str(record[column])
+
+                value = record[column]
+                if column in self.translations:
+                    value = self.translations[column](value)
+
+                string = str(value)
                 truncated = string if len(string) < column_widths[n] else string[:column_widths[n] - 6] + "..."
                 self.screen.addstr(2 + nr, col_start + 2, truncated, attr)
 
