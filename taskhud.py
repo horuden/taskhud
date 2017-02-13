@@ -1,21 +1,25 @@
 from curses import wrapper
 from cwrapper import CursesHud
+from datetime import datetime, timezone
 from taskwrapper import TaskWrapper
-
 
 def callback():
     pass
 
 def t_date(s):
-    year   = s[0:4]
-    month  = s[4:6]
-    day    = s[6:8]
+    year   = int(s[0:4])
+    month  = int(s[4:6])
+    day    = int(s[6:8])
 
-    hour   = s[9:11]
-    minute = s[11:13]
-    second = s[13:15]
+    hour   = int(s[9:11])
+    minute = int(s[11:13])
+    second = int(s[13:15])
 
-    return "{}-{}-{} {}:{}:{}".format(year, month, day, hour, minute, second)
+    # This is UTC time
+    ts = datetime(year, month, day, hour, minute, second)
+
+    # This is why we can't have nice things
+    return ts.replace(tzinfo=timezone.utc).astimezone(tz=None).isoformat(sep=" ")[:-6]
 
 def t_tags(s):
     return ", ".join(s)
