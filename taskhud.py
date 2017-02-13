@@ -20,6 +20,9 @@ def t_date(s):
 def t_tags(s):
     return ", ".join(s)
 
+def t_urgency(s):
+    return "{:>6.2f}".format(s)
+
 def run_gui(screen):
     hud = CursesHud(screen)
 
@@ -38,6 +41,8 @@ def run_gui(screen):
     hud.set_translation("scheduled", t_date)
     
     hud.set_translation("tags", t_tags)
+    
+    hud.set_translation("urgency", t_urgency)
 
     hud.mainloop()
 
