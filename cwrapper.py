@@ -12,6 +12,9 @@ class CursesHud:
         self.columns = []
         self.records = []
 
+        self.scrollpos = 0
+        self.selectpos = 0
+
     def render(self):
         column_widths = []
 
@@ -56,8 +59,19 @@ class CursesHud:
         self.screen.addstr(0, sum(column_widths), "│")
         self.screen.addstr(1, sum(column_widths), "┘")
 
+        # display records
+        slice_start = self.scrollpos
+        slice_end = self.scrollpos + curses.LINES - 2
+        record_slice = self.records[slice_start:slice_end]
+        for nr, record in enumerate(record_slice):
+            attr = 0
 
-        for nr, record in enumerate(self.records):
+            if nr + slice_start == self.selectpos:
+                attr = curses.A_REVERSE
+            else:
+                attr = curses.A_NORMAL
+            self.screen.addstr(2+nr, 0, " " * (curses.COLS - 1), attr)
+
             for n, column in enumerate(self.columns):
                 if column not in record:
                     continue
@@ -65,7 +79,7 @@ class CursesHud:
                 col_start = sum(column_widths[0:n])
                 string = str(record[column])
                 truncated = string if len(string) < column_widths[n] else string[:column_widths[n] - 6] + "..."
-                self.screen.addstr(2 + nr, col_start + 2, truncated)
+                self.screen.addstr(2 + nr, col_start + 2, truncated, attr)
 
         self.screen.refresh()
 
@@ -102,9 +116,13 @@ class CursesHud:
             if c == curses.KEY_RESIZE:
                 curses.update_lines_cols()
                 self.screen.clear()
-                self.screen.addstr(20, 0, "resize -> ({}, {})".format(curses.COLS, curses.LINES))
                 self.render()
-                self.screen.addstr(20, 0, " " * curses.COLS)
             if c == curses.KEY_UP:
-                self.screen.addstr(21, 0, "UP")
-                self.render()
+                self.selectpos = max(self.selectpos - 1, 0)
+                if self.selectpos < self.scrollpos:
+                    self.scrollpos -= 1
+                    
+            if c == curses.KEY_DOWN:
+                self.selectpos = min(self.selectpos + 1, len(self.records) - 1)
+                if self.selectpos >= (self.scrollpos + curses.LINES - 2) :
+                    self.scrollpos += 1
