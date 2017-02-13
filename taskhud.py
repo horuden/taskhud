@@ -12,6 +12,11 @@ def run_gui(screen):
     for task in task_wrapper.task_db:
         hud.add_record(task)
 
+    hud.set_extra_info("uuid")
+    hud.set_extra_info("depends")
+    hud.set_extra_info("annotations")
+    hud.set_extra_info("modified")
+
     hud.mainloop()
 
 if __name__ == "__main__":

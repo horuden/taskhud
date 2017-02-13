@@ -10,10 +10,20 @@ class CursesHud:
         self.screen.nodelay(True)
 
         self.columns = []
+        self.extra_info_keys = []
         self.records = []
 
         self.scrollpos = 0
         self.selectpos = 0
+
+    def set_extra_info(self, key):
+        """
+        set a key in records to be displayed in bottom panel rather than
+        main display
+        """
+        if key in self.columns:
+            self.columns.remove(key)
+            self.extra_info_keys += [key]
 
     def render(self):
         column_widths = []
