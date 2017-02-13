@@ -1,21 +1,60 @@
+""" ---------------------------------------------------------------------------
+
+    cwrapper.py - Implementation for CursesHud class
+
+    Copyright 2017, John Ferguson
+
+    Licensed under GPLv3, see LICENSE for full details
+
+--------------------------------------------------------------------------- """
+
 import curses
-import time
 
 class CursesHud:
+    """
+    Object that accepts dictionaries representing data records.
+
+    Records are parsed dynamically, so there's no need to configure column
+    names ahead of time. Columns can be removed from display, and moved to
+    the extended info panel at the bottom by calling set_extra_info().
+
+    To modify record values, translating them to user readable values, call
+    set_translation().
+
+    Column widths are initially set to the size of the largest record value's
+    length (or the column heading if longer). If the total of displayed column
+    widths exceeds available columns in the terminal, 1 column width is
+    subtracted from the largest column iteratively until all columns will fit.
+
+    Any column headings/values which are truncated are suffixed by "..."
+    """
     def __init__(self, screen):
         """
         screen: curses screen object
         """
+        # ncurses screen object
         self.screen = screen
-        self.screen.nodelay(True)
+        self.screen.nodelay(True)   # self.screen.getch(), non-blocking
 
+        # Column titles (keys in self.records)
         self.columns = []
+
+        # keys in self.records that should be displayed in bottom pane
         self.extra_info_keys = []
+
+        # Records to display in centre pane
         self.records = []
 
+        # keys - key name from records
+        # values - function accepting record value, returns string
+        # Used to generically convert from data format to display format
         self.translations = {}
 
+        # index in self.records that centre pane items start listing from
         self.scrollpos = 0
+
+        # index from 0 of displayed items in centre pane that user has
+        # selected with arrow keys
         self.selectpos = 0
 
     def set_extra_info(self, key):
@@ -28,9 +67,15 @@ class CursesHud:
             self.extra_info_keys += [key]
 
     def set_translation(self, key, func):
+        """
+        Set callback which translates raw record values keyed by `key` by
+        passing the raw value to `func`, which yields the display formatted
+        string.
+        """
         self.translations[key] = func
 
     def render(self):
+        # TODO: this would be more efficient as a dict
         column_widths = []
 
         # Calculate widths for columns
@@ -107,6 +152,7 @@ class CursesHud:
                 truncated = string if len(string) < column_widths[n] else string[:column_widths[n] - 6] + "..."
                 self.screen.addstr(2 + nr, col_start + 2, truncated, attr)
 
+        # draw latest changes to screen
         self.screen.refresh()
 
     def add_column(self, name):
@@ -125,30 +171,46 @@ class CursesHud:
             if k not in self.columns:
                 self.add_column(k)
 
+        # add record to local store
         self.records += [record]
 
-
     def mainloop(self):
+        """
+        Called after HUD has been set up. Handles rendering and user input.
+        """
+        # Disable cursor display by default
         curses.curs_set(0)
+
+        # Display initial state
         self.render()
 
-        self.x = 0
-        
         while True:
+            # Render before fetching input
             self.render()
 
+            # note: call is non-blocking, per __init__ calling nodelay(True)
             c = self.screen.getch()
 
             if c == curses.KEY_RESIZE:
+                # Terminal has been resized
+
+                # must be called so that curses.LINES, curses.COLS will change
                 curses.update_lines_cols()
+
+                # in case old data won't be redrawn after resize
                 self.screen.clear()
-                self.render()
+
             if c == curses.KEY_UP:
+                # Move up as far as the 0th record
                 self.selectpos = max(self.selectpos - 1, 0)
                 if self.selectpos < self.scrollpos:
+                    # Handle scrolling if we were at the first record on screen
                     self.scrollpos -= 1
                     
             if c == curses.KEY_DOWN:
+                # Move down as far as the Nth record
                 self.selectpos = min(self.selectpos + 1, len(self.records) - 1)
                 if self.selectpos >= (self.scrollpos + curses.LINES - 2) :
+                    # Handle scrolling if we were at the last record on screen
                     self.scrollpos += 1
+
