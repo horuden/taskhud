@@ -13,14 +13,6 @@ from cwrapper import CursesHud
 from datetime import datetime, timezone
 from taskwrapper import TaskWrapper
 
-# TODO: give this a name that better reflects its purpose
-def callback():
-    """
-    stub: called when TaskWarrior database is updated
-    """
-    # TODO: pass the new records to CursesHud
-    pass
-
 # TODO: move to separate module
 def t_date(s):
     """
@@ -58,12 +50,18 @@ def t_urgency(s):
     """
     return "{:>6.2f}".format(s)
 
-def run_gui(screen):
+def run_gui(screen, task_wrapper):
     """
     Called by curses wrapper. Sets up HUD before running mainloop
     """
     # HUD object
     hud = CursesHud(screen)
+
+    # link TaskWrapper callback to update the HUD
+    def update_hud_records():
+        hud.records = task_wrapper.task_db
+
+    task_wrapper.change_cb = update_hud_records
 
     # Add all tasks stored in task_wrapper at startup
     # TODO: these should be refreshed continuously and asynchronously
@@ -96,9 +94,9 @@ def run_gui(screen):
 if __name__ == "__main__":
     # Entry point
 
-    # Start up TaskWrapper and set update callback
-    task_wrapper = TaskWrapper(change_cb = callback)
+    # Start up TaskWarrior monitoring thread
+    task_wrapper = TaskWrapper()
 
     # Start ncurses, and pass screen object to function that sets up HUD
-    wrapper(run_gui)
+    wrapper(run_gui, task_wrapper)
 
