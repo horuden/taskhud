@@ -57,6 +57,9 @@ class CursesHud:
         # selected with arrow keys
         self.selectpos = 0
 
+        # height of bottom panel (for extended info display)
+        self.bottom_panel_height = 4
+
     def set_extra_info(self, key):
         """
         set a key in records to be displayed in bottom panel rather than
@@ -75,6 +78,35 @@ class CursesHud:
         self.translations[key] = func
 
     def render(self):
+        # TODO: need to apply translation to raw values
+        # TODO: break this out into separate function, main panel as well
+        # Render bottom panel first
+        self.screen.addstr(curses.LINES - self.bottom_panel_height, 0, "─" * curses.COLS)
+        for i in range(curses.LINES - self.bottom_panel_height + 1, curses.LINES):
+            self.screen.addstr(i, 0, " " * (curses.COLS - 1))
+
+        active_index = self.selectpos
+        active_record = self.records[active_index]
+
+        col_acc = 0
+        line_acc = 0
+        for field in self.extra_info_keys:
+            if field not in active_record:
+                continue
+
+            st = "{}: {}, ".format(field, active_record[field])
+            if col_acc + len(st) >= curses.COLS:
+                col_acc = 0
+                line_acc += 1
+
+            self.screen.addstr(curses.LINES - self.bottom_panel_height + 1 + line_acc, col_acc, st)
+            col_acc += len(st)
+
+
+        #----------------------------------------------------------------------
+
+        # Then, render the main view
+
         # TODO: this would be more efficient as a dict
         column_widths = []
 
@@ -127,7 +159,7 @@ class CursesHud:
 
         # display records
         slice_start = self.scrollpos
-        slice_end = self.scrollpos + curses.LINES - 2
+        slice_end = self.scrollpos + curses.LINES - 2 - self.bottom_panel_height
         record_slice = self.records[slice_start:slice_end]
         for nr, record in enumerate(record_slice):
             attr = 0
@@ -210,7 +242,7 @@ class CursesHud:
             if c == curses.KEY_DOWN:
                 # Move down as far as the Nth record
                 self.selectpos = min(self.selectpos + 1, len(self.records) - 1)
-                if self.selectpos >= (self.scrollpos + curses.LINES - 2) :
+                if self.selectpos >= (self.scrollpos + curses.LINES - 2 - self.bottom_panel_height) :
                     # Handle scrolling if we were at the last record on screen
                     self.scrollpos += 1
 
