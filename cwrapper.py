@@ -103,8 +103,8 @@ class CursesHud:
 
         # Shrink columns until all fits on screen
         # TODO: handling when there's too many columns to render happily
-        if sum(column_widths) > curses.COLS:
-            while sum(column_widths) > (curses.COLS - 1):
+        if sum(column_widths) >= curses.COLS:
+            while sum(column_widths) >= (curses.COLS):
                 idx_largest = column_widths.index(max(column_widths))
                 column_widths[idx_largest] -= 1
 
@@ -114,7 +114,7 @@ class CursesHud:
             col_width = column_widths[n]
             self.screen.addstr(0, col_start, "│")
             string = column
-            truncated = string if len(string) < column_widths[n] - 1 else string[:column_widths[n] - 6] + "..."
+            truncated = string if len(string) < (column_widths[n] - 2) else string[:column_widths[n] - 6] + "..."
             self.screen.addstr(0, col_start + 2, truncated)
             self.screen.addstr(1, col_start, "┴" + ("─" * (col_width - 1)) )
 
@@ -149,7 +149,7 @@ class CursesHud:
                     value = self.translations[column](value)
 
                 string = str(value)
-                truncated = string if len(string) < column_widths[n] else string[:column_widths[n] - 6] + "..."
+                truncated = string if len(string) < (column_widths[n] - 2) else string[:column_widths[n] - 6] + "..."
                 self.screen.addstr(2 + nr, col_start + 2, truncated, attr)
 
         # draw latest changes to screen
