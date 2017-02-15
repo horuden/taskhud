@@ -97,7 +97,17 @@ class CursesHud:
         """
         self.translations[key] = func
 
+    def _render_title(self):
+        title = "{title bar placeholder}"
+        title_bar = title + (" " * (curses.COLS - len(title)))
+        self.screen.addstr(0,0, title_bar, curses.A_REVERSE)
+
     def render(self):
+        # Render title bar (placeholder for now)
+        self._render_title()
+
+        h_start = 1
+
         # TODO: need to apply translation to raw values
         # TODO: break this out into separate function, main panel as well
         # Render bottom panel first
@@ -162,29 +172,32 @@ class CursesHud:
 
         # In case columns change between renders, clearing the first row
         # will ensure that no leftover garbage is only partially drawn over
-        self.screen.addstr(0,0, " " * curses.COLS)
+        self.screen.addstr(h_start,0, " " * curses.COLS)
+        self.screen.addstr(h_start + 1,0, " " * curses.COLS)
         
         # draw column headings
         for n, column in enumerate(self.columns):
 
             col_start = sum(column_widths[0:n])
             col_width = column_widths[n]
-            self.screen.addstr(0, col_start, "│")
+            self.screen.addstr(h_start, col_start, "│")
+            self.screen.addstr(h_start + 1, col_start, "│")
             string = column
             truncated = string if len(string) < (column_widths[n] - 2) else string[:column_widths[n] - 6] + "..."
-            self.screen.addstr(0, col_start + 2, truncated)
-            self.screen.addstr(1, col_start, "┴" + ("─" * (col_width - 1)) )
+            self.screen.addstr(h_start + 1, col_start + 2, truncated)
+            self.screen.addstr(h_start + 2, col_start, "┴" + ("─" * (col_width - 1)) )
 
             # Debug: show column widths with marker
             #self.screen.addstr(2 + (n % 2), col_start, "x" * col_width)
         # add left and right edge of column headings
-        self.screen.addstr(1, 0, "└")
-        self.screen.addstr(0, sum(column_widths), "│")
-        self.screen.addstr(1, sum(column_widths), "┘")
+        self.screen.addstr(h_start + 2, 0, "└")
+        self.screen.addstr(h_start, sum(column_widths), "│")
+        self.screen.addstr(h_start + 1, sum(column_widths), "│")
+        self.screen.addstr(h_start + 2, sum(column_widths), "┘")
 
         # display records
         slice_start = self.scrollpos
-        slice_end = self.scrollpos + curses.LINES - 2 - self.bottom_panel_height
+        slice_end = self.scrollpos + curses.LINES - 3 - self.bottom_panel_height
         record_slice = self.records[slice_start:slice_end]
         for nr, record in enumerate(record_slice):
             attr = 0
@@ -193,7 +206,7 @@ class CursesHud:
                 attr = curses.A_REVERSE
             else:
                 attr = curses.A_NORMAL
-            self.screen.addstr(2+nr, 0, " " * (curses.COLS - 1), attr)
+            self.screen.addstr(h_start + 3 +nr, 0, " " * curses.COLS, attr)
 
             for n, column in enumerate(self.columns):
                 if column not in record:
@@ -207,7 +220,7 @@ class CursesHud:
 
                 string = str(value)
                 truncated = string if len(string) < (column_widths[n] - 2) else string[:column_widths[n] - 6] + "..."
-                self.screen.addstr(2 + nr, col_start + 2, truncated, attr)
+                self.screen.addstr(h_start + 3 + nr, col_start + 2, truncated, attr)
 
         # draw latest changes to screen
         self.screen.refresh()
