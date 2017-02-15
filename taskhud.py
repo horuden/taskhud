@@ -59,7 +59,7 @@ def run_gui(screen, task_wrapper):
 
     # link TaskWrapper callback to update the HUD
     def update_hud_records():
-        hud.records = task_wrapper.task_db
+        hud.add_record(task_wrapper.task_db)
 
     task_wrapper.change_cb = update_hud_records
 
