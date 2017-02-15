@@ -160,8 +160,13 @@ class CursesHud:
                 idx_largest = column_widths.index(max(column_widths))
                 column_widths[idx_largest] -= 1
 
+        # In case columns change between renders, clearing the first row
+        # will ensure that no leftover garbage is only partially drawn over
+        self.screen.addstr(0,0, " " * curses.COLS)
+        
         # draw column headings
         for n, column in enumerate(self.columns):
+
             col_start = sum(column_widths[0:n])
             col_width = column_widths[n]
             self.screen.addstr(0, col_start, "│")
