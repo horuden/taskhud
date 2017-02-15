@@ -193,18 +193,28 @@ class CursesHud:
         """
         self.columns += [name]
 
-    def add_record(self, record):
+    def add_record(self, records):
         """
-        add a record to the display, will add columns as needed. `record` is
-        a dictionary
+        add records to the display, will add columns as needed. `record` is
+        a dictionary, or a list of dictionaries.
         """
-        # see if new columns are needed to support this record
-        for k in record.keys():
-            if k not in self.columns:
-                self.add_column(k)
+        if type(records) is not list:
+            records = [records]
 
-        # add record to local store
-        self.records += [record]
+        for record in records:
+            # If record already exists, skip it
+            if record in self.records:
+                continue
+
+            # TODO: need hook to remove columns when no records in the database
+            #       have those keys
+            # see if new columns are needed to support this record
+            for k in record.keys():
+                if k not in self.columns:
+                    self.add_column(k)
+
+            # add record to local store
+            self.records += [record]
 
     def mainloop(self):
         """
