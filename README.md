@@ -11,5 +11,17 @@ Simple interface to TaskWarrior using `ncurses`
 
 ## Development Status
 
-Just prototyping for now
+### 2017-02-15
+
+* All items from task database displayed
+* Everything updates automatically when changes are made from `task`
+* All the funky stuff like terminal resize is handled
+* Bottom panel to display extra record fields when columns have to be excluded
+  from main display for readability
+* Automatic translation of ugly looking fields
+* Project is slowly turning into two components:
+    * Main project (TaskHUD)
+    * CursesHud (I've made every effort to keep TaskHUD logic out of it)
+
+[[https://i.imgur.com/JoIGEIA.png]]
 
