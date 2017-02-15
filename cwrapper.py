@@ -246,8 +246,6 @@ class CursesHud:
                     self.records[n] = record
                     replaced = True
                     break
-            if replaced:
-                continue
 
             # TODO: need hook to remove columns when no records in the database
             #       have those keys
@@ -256,8 +254,12 @@ class CursesHud:
                 if (k not in self.columns) and (k not in self.extra_info_keys):
                     self.add_column(k)
 
-            # add record to local store
-            self.records += [record]
+            if replaced:
+                # Old record updated, any new columns added above
+                continue
+            else:
+                # This is a completely new record with new unique key
+                self.records += [record]
 
         # Finally, sort records by appropriate key
         if self.sort_key is not None:
