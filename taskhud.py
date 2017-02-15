@@ -57,6 +57,9 @@ def run_gui(screen, task_wrapper):
     # HUD object
     hud = CursesHud(screen)
 
+    # Use "uuid" as unique key for records
+    hud.set_unique_key("uuid")
+
     # link TaskWrapper callback to update the HUD
     def update_hud_records():
         hud.add_record(task_wrapper.task_db)

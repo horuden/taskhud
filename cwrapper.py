@@ -39,6 +39,11 @@ class CursesHud:
         # Column titles (keys in self.records)
         self.columns = []
 
+        # Unique key for records used to disambiguate when records change
+        # Note: if value isn't set before adding records, the first key of
+        #       the first record becomes the unique key
+        self.unique_key = None
+
         # keys in self.records that should be displayed in bottom pane
         self.extra_info_keys = []
 
@@ -59,6 +64,12 @@ class CursesHud:
 
         # height of bottom panel (for extended info display)
         self.bottom_panel_height = 4
+
+    def set_unique_key(self, key):
+        """
+        set the unique key to disambiguate when records are updated
+        """
+        self.unique_key = key
 
     def set_extra_info(self, key):
         """
@@ -192,7 +203,7 @@ class CursesHud:
         Add a column to the HUD
         """
         self.columns += [name]
-
+    
     def add_record(self, records):
         """
         add records to the display, will add columns as needed. `record` is
@@ -201,9 +212,32 @@ class CursesHud:
         if type(records) is not list:
             records = [records]
 
+        # automatically set unique key if none is set by this point
+        if self.unique_key is None:
+            self.unique_key = list(records[0].keys())[0]
+
+        # verify that all unique keys are unique for this record set
+        unique_keys = []
+        for record in records:
+            if record[self.unique_key] not in unique_keys:
+                unique_keys += [record[self.unique_key]]
+            else:
+                raise Exception("duplicate records with same unique key")
+
         for record in records:
             # If record already exists, skip it
             if record in self.records:
+                continue
+
+            # If an existing record has the same unique key, then the record
+            # has been updated, and we will replace it
+            replaced = False
+            for n, check in enumerate(self.records):
+                if check[self.unique_key] == record[self.unique_key]:
+                    self.records[n] = record
+                    replaced = True
+                    break
+            if replaced:
                 continue
 
             # TODO: need hook to remove columns when no records in the database
