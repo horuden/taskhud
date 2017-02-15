@@ -23,5 +23,5 @@ Simple interface to TaskWarrior using `ncurses`
     * Main project (TaskHUD)
     * CursesHud (I've made every effort to keep TaskHUD logic out of it)
 
-[[https://i.imgur.com/JoIGEIA.png]]
+![screengrab](https://i.imgur.com/JoIGEIA.png)
 
