@@ -59,6 +59,8 @@ def run_gui(screen, task_wrapper):
 
     # Use "uuid" as unique key for records
     hud.set_unique_key("uuid")
+    # Use "id" as sort key for displaying records
+    hud.set_sort_key("id")
 
     # link TaskWrapper callback to update the HUD
     def update_hud_records():

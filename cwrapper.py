@@ -39,6 +39,9 @@ class CursesHud:
         # Column titles (keys in self.records)
         self.columns = []
 
+        # Key to sort records by
+        self.sort_key = None
+
         # Unique key for records used to disambiguate when records change
         # Note: if value isn't set before adding records, the first key of
         #       the first record becomes the unique key
@@ -70,6 +73,12 @@ class CursesHud:
         set the unique key to disambiguate when records are updated
         """
         self.unique_key = key
+
+    def set_sort_key(self, key):
+        """
+        set the key used to sort records after insertion
+        """
+        self.sort_key = key
 
     def set_extra_info(self, key):
         """
@@ -249,6 +258,10 @@ class CursesHud:
 
             # add record to local store
             self.records += [record]
+
+        # Finally, sort records by appropriate key
+        if self.sort_key is not None:
+            self.records.sort(key=lambda R: R[self.sort_key])
 
     def mainloop(self):
         """
