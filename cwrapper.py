@@ -210,7 +210,7 @@ class CursesHud:
             #       have those keys
             # see if new columns are needed to support this record
             for k in record.keys():
-                if k not in self.columns:
+                if (k not in self.columns) and (k not in self.extra_info_keys):
                     self.add_column(k)
 
             # add record to local store
