@@ -97,6 +97,46 @@ class CursesHud:
         """
         self.translations[key] = func
 
+    def _get_column_widths(self):
+        """
+        returns a dict keyed by column name, values are column widths
+        """
+        column_widths = {}
+
+        # Calculate widths for columns
+        # TODO: cache these values if records don't change between renders
+        for column in self.columns:
+            record_max_width = 0
+
+            for record in self.records:
+                if column in record:
+                    r_value = record[column]
+                    if column in self.translations:
+                        r_value = self.translations[column](r_value)
+                    else:
+                        r_value = str(r_value)
+                    
+                    record_max_width = max(record_max_width, len(r_value))
+
+            record_max_width += 3
+
+            # len(column) + 3:
+            #   len(column): space for column header
+            #   +2: left border + space
+            #   +1: space on right of header
+            column_width = max(record_max_width, len(column) + 3)
+
+            column_widths[column] = column_width
+
+        # Shrink columns until all fits on screen
+        # TODO: handling when there's too many columns to render happily
+        if sum(column_widths.values()) >= curses.COLS:
+            while sum(column_widths.values()) >= curses.COLS:
+                key_largest = max(column_widths, key=column_widths.get)
+                column_widths[key_largest] -= 1
+
+        return column_widths
+
     def _render_title(self):
         title = "{title bar placeholder}"
         title_bar = title + (" " * (curses.COLS - len(title)))
@@ -105,8 +145,6 @@ class CursesHud:
     def render(self):
         # Render title bar (placeholder for now)
         self._render_title()
-
-        h_start = 1
 
         # TODO: need to apply translation to raw values
         # TODO: break this out into separate function, main panel as well
@@ -137,38 +175,19 @@ class CursesHud:
 
         # Then, render the main view
 
-        # TODO: this would be more efficient as a dict
-        column_widths = []
+        h_start = 1
 
-        # Calculate widths for columns
-        # TODO: cache these values if records don't change between renders
-        for column in self.columns:
-            record_max_width = 0
+        column_widths = self._get_column_widths()
+        sum_column_widths = sum([column_widths[c] for c in column_widths])
 
-            for record in self.records:
-                if column in record:
-                    r_value = record[column]
-                    if column in self.translations:
-                        r_value = self.translations[column](r_value)
-                    else:
-                        r_value = str(r_value)
-                    
-                    record_max_width = max(record_max_width, len(r_value))
+        # utility function to get first screen column for heading/field
+        # based on column name/key
+        def column_start(column_name):
+            name_index = self.columns.index(column_name)
+            col_start = \
+                sum([column_widths[c] for c in self.columns[0:name_index]])
 
-            record_max_width += 3
-
-            # len(column) + 3:
-            #   len(column): space for column header
-            #   +2: left border + space
-            #   +1: space on right of header
-            column_widths += [max(record_max_width, len(column) + 3)]
-
-        # Shrink columns until all fits on screen
-        # TODO: handling when there's too many columns to render happily
-        if sum(column_widths) >= curses.COLS:
-            while sum(column_widths) >= (curses.COLS):
-                idx_largest = column_widths.index(max(column_widths))
-                column_widths[idx_largest] -= 1
+            return col_start
 
         # In case columns change between renders, clearing the first row
         # will ensure that no leftover garbage is only partially drawn over
@@ -178,12 +197,12 @@ class CursesHud:
         # draw column headings
         for n, column in enumerate(self.columns):
 
-            col_start = sum(column_widths[0:n])
-            col_width = column_widths[n]
+            col_start = column_start(column)
+            col_width = column_widths[column]
             self.screen.addstr(h_start, col_start, "│")
             self.screen.addstr(h_start + 1, col_start, "│")
             string = column
-            truncated = string if len(string) < (column_widths[n] - 2) else string[:column_widths[n] - 6] + "..."
+            truncated = string if len(string) < (column_widths[column] - 2) else string[:column_widths[column] - 6] + "..."
             self.screen.addstr(h_start + 1, col_start + 2, truncated)
             self.screen.addstr(h_start + 2, col_start, "┴" + ("─" * (col_width - 1)) )
 
@@ -191,9 +210,9 @@ class CursesHud:
             #self.screen.addstr(2 + (n % 2), col_start, "x" * col_width)
         # add left and right edge of column headings
         self.screen.addstr(h_start + 2, 0, "└")
-        self.screen.addstr(h_start, sum(column_widths), "│")
-        self.screen.addstr(h_start + 1, sum(column_widths), "│")
-        self.screen.addstr(h_start + 2, sum(column_widths), "┘")
+        self.screen.addstr(h_start, sum_column_widths, "│")
+        self.screen.addstr(h_start + 1, sum_column_widths, "│")
+        self.screen.addstr(h_start + 2, sum_column_widths, "┘")
 
         # display records
         slice_start = self.scrollpos
@@ -212,14 +231,14 @@ class CursesHud:
                 if column not in record:
                     continue
 
-                col_start = sum(column_widths[0:n])
+                col_start = column_start(column)
 
                 value = record[column]
                 if column in self.translations:
                     value = self.translations[column](value)
 
                 string = str(value)
-                truncated = string if len(string) < (column_widths[n] - 2) else string[:column_widths[n] - 6] + "..."
+                truncated = string if len(string) < (column_widths[column] - 2) else string[:column_widths[column] - 6] + "..."
                 self.screen.addstr(h_start + 3 + nr, col_start + 2, truncated, attr)
 
         # draw latest changes to screen
