@@ -138,9 +138,20 @@ class CursesHud:
         return column_widths
 
     def _render_title(self):
+        """
+        rendering of title bar on first line (space to display modal info,
+        and even keybinding hints)
+        """
         title = "{title bar placeholder}"
         title_bar = title + (" " * (curses.COLS - len(title)))
         self.screen.addstr(0,0, title_bar, curses.A_REVERSE)
+
+    def _render_headers(self, start_line=1):
+        """
+        rendering of headers (3 lines tall, 2 lines header, 1 line bottom
+        border.
+        """
+        pass
 
     def render(self):
         # Render title bar (placeholder for now)
